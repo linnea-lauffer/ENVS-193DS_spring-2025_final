@@ -1,0 +1,67 @@
+---
+title: "ENVS-193DS_spring-2025_final"
+name: "Linnea Lauffer"
+date: "2025-06-10"
+format:
+  html:
+    toc: true
+    toc-location: left
+    toc-float: true
+---
+
+# Set Up
+
+```{Set Uo}
+#| message: false # use this to make sure messages don't show up
+#| warning: false # use this to make sure warnings don't show up
+
+# load packages 
+library(tidyverse)
+library(janitor)
+```
+
+# 1. Research Writing
+
+## a. Transparent Statistical Methods
+
+In part 1, they used
+
+In part 2, they used
+
+## b. More Information Needed
+
+## c. Suggestions for rewriting
+
+# 2. Data Visualization
+
+## a. Cleaning and Summarizing
+
+## b. Visualize the Data
+
+# 3. Data Analysis
+
+## a. Response Variable
+
+## b. Purpose of Study
+
+## c. Difference in "Seasons"
+
+## d. Table of Models
+
+## e. Run the Models
+
+## f. Check the diagnositics 
+
+## g. Select the Best Model
+
+## h. Visualize the Model Predictions
+
+## i. Write a Caption for Figure 
+
+## j. Calculate Model Predictions
+
+## k. Interpret Results
+
+# 4. Affective and Exploratory Visualizations
+
+## a. Comparing Visualizations
