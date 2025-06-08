@@ -11,26 +11,38 @@ format:
 
 # Set Up
 
-```{Set Uo}
+```{Set Up}
 #| message: false # use this to make sure messages don't show up
 #| warning: false # use this to make sure warnings don't show up
 
 # load packages 
 library(tidyverse)
 library(janitor)
+library(here)
+
+# read in data
+sst <- read_csv(here("data", "SST_update2023.csv")) 
 ```
 
 # 1. Research Writing
 
 ## a. Transparent Statistical Methods
 
-In part 1, they used
+In part 1, they used a Pearson's correlation test to determine if there is a statistically significant correlation between distance from headwater(km) and annual total nitrogen load(kg year^-1^). 
 
-In part 2, they used
+In part 2, they used a one-way ANOVA to test whether there is a statistically significant difference in average nitrogen load(kg year^-1^) among different nitrogen sources(urban land, atmospheric deposition, fertilizer wastewater treatment, and grasslands). 
 
 ## b. More Information Needed
 
+One statistic that should be included is the F-statistic. This is the test statistic for ANOVA that is the ratio of between group variance to within group variance. The F distribution can be used to evaluate significance, and would provide more context.    
+
+Another test that should be included is a Tukey Honestly Significant Difference (HSD) test. This would tell which groups are actually different when you compare them. ANOVA only indicates whether at least one group differs from the others. The Tukey's HSD would provide more detail. 
+
 ## c. Suggestions for rewriting
+
+Part 1: We rejected the null hypothesis that there is no correlation between distance from headwater(km) and annual total nitrogen load(kg year^-1^) (Pearson's r=unknown, p=0.02, $\alpha$=unknown). 
+
+Part 2: We rejected the null hypothesis that there is no difference in average nitrogen load(kg year^-1^) between sources(urban land, atmospheric deposition, fertilizer, wastewater treatment, and grasslands) (one-way ANOVA, F = unknown, degrees of freedom = unknown, p=0.02, $\alpha$ = unknown). On average, [unknown source] tend to have a higher average nitrogen load(kg year^-1^) (difference unknown, 95% CI: unknown).
 
 # 2. Data Visualization
 
