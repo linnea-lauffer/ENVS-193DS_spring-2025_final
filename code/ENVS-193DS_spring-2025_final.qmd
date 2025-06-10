@@ -16,12 +16,16 @@ format:
 #| warning: false # use this to make sure warnings don't show up
 
 # load packages 
-library(tidyverse)
-library(janitor)
-library(here)
+library(tidyverse) # general use
+library(janitor) # cleaning data frames
+library(here) # file organization
+library(DHARMa) # check diagnostics 
+library(MuMIn) # model selection
+library(ggeffects) # getting model predictions
 
 # read in data
-sst <- read_csv(here("data", "SST_update2023.csv")) 
+sst <- read_csv(here("data", "SST_update2023.csv"))
+nest_boxes <- read_csv(here("data", "occdist.csv"))
 ```
 
 # 1. Research Writing
@@ -88,23 +92,139 @@ ggplot(data = sst_clean,
 
 ## a. Response Variable
 
+In this data set, the 1s and 0s represent whether a nest box was occupied by a specific species. A value of 1 means that the box was occupied by the indicated species (for example sp = 1 for swift parrot), and a value of 0 means it was occupied by another species or left empty depending on the variable. 
+
 ## b. Purpose of Study
+
+The main difference between Swift Parrots and the other two species is that Swift Parrots are critically endangered and they rarely breed in the same location in successive years. As a result, nontarget birds such as Common Starlings and Tree Martins can learn to identify permanently deployed nest boxes as a resource.
 
 ## c. Difference in "Seasons"
 
+The data is presented from the summer breeding seasons of 2016 and 2019, when parrots bred at the study area, triggered by a mast tree flowering event. In 2016, the nest boxes were newly deployed and in 2019 the boxes still remained from 2016. 
+
 ## d. Table of Models
+
+4 models total:
+
+| Model number | Season | Distance to forest edge | Model description           |
+|:------------:|:------:|:-----------------------:|---------------------------- |
+| 0            |        |                         | no predictors (null model)  |
+| 1            |    X   |            X            | all predictors (full model) |
+| 2            |    X   |            X            | season only                 |
+| 3            |        |            X            | distance to forest edge only|
 
 ## e. Run the Models
 
+```{R}
+nest_boxes_clean <- nest_boxes  |> # starting data frame
+  clean_names() # clean column names 
+
+# model 0: null model
+model0 <- glm(
+  sp ~ 1, # formula
+  data = nest_boxes_clean, # data frame
+  family = binomial # for binary data
+)
+
+# model 1: all predictors
+model1 <- glm(
+  sp ~ season + edge_distance, # formula
+  data = nest_boxes_clean, # data frame
+  family = binomial # for binary data
+)
+
+# model 2: season only
+model2 <- glm(
+  sp ~ season, # formula
+  data = nest_boxes_clean, # data frame
+  family = binomial # for binary data 
+)
+
+# model 3: distance to forest edge only
+model3 <- glm(
+  sp ~ edge_distance, # formula
+  data = nest_boxes_clean, # data frame
+  family = binomial # for binary data
+)
+```
+
+
 ## f. Check the diagnositics 
+
+```{R}
+plot(simulateResiduals(model0), main = "Model 0")
+plot(simulateResiduals(model1), main = "Model 1")
+plot(simulateResiduals(model2), main = "Model 2")
+plot(simulateResiduals(model3), main = "Model 3")
+```
 
 ## g. Select the Best Model
 
+```{R}
+AICc(model0,
+     model1,
+     model2,
+     model3) |> 
+  # arranging output in descending order of AIC
+  arrange(AICc)
+```
+
+The best model as determined by Akaike's Information Criterion (AIC) included both season and distance to forest edge as predictors of Swift Parrot nest box occupancy. 
+
 ## h. Visualize the Model Predictions
+
+```{R}
+model1_predictions <- ggpredict(
+  model1, # model object
+  terms = c("edge_distance", "season") # predictors
+) |> 
+  # treating this like a regular data frame
+  # renaming the columns
+  rename(edge_distance = x,
+         season = group)
+
+# base layer: ggplot
+ggplot() +
+  geom_jitter(data = nest_boxes_clean, # using the nest_boxes_clean object
+              aes(x = edge_distance,
+           y = sp,
+           color = season)) +
+  geom_line(data = model1_predictions,
+            aes(x = edge_distance,
+                y = predicted, 
+                color = season)) +
+  geom_ribbon(data = model1_predictions,
+                  aes(x = edge_distance,
+                      ymin = conf.low,
+                      ymax = conf.high,
+                      fill = season)) + 
+  # manually setting colors
+  scale_color_manual(values = c("2016" = "orchid", "2019" = "orange")) + 
+  scale_fill_manual(values = c("2016" = "orchid", "2019" = "orange")) + 
+  # labelling x- and y-axis
+  labs(x = "Distance to Forest Edge (m)",
+       y = "Probability of Swift Parrot Occupancy",
+       title = "Predicted Nest Box Occupancy By Swift Parrots",
+       color = "Season",
+       fill = "Season") +
+  # clean up theme
+  theme_minimal()
+```
+
 
 ## i. Write a Caption for Figure 
 
 ## j. Calculate Model Predictions
+
+```{R}
+predicted_probabilities <- ggpredict(
+  model1,
+  terms = c("edge_distance [0,900]", "season")
+)
+
+print(predicted_probabilities)
+```
+
 
 ## k. Interpret Results
 
