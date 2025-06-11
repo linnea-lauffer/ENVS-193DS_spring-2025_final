@@ -181,7 +181,7 @@ plot(simulateResiduals(model3)) # generate and plot simulated residuals for mode
 
 ```{R}
 # compare AICc for the following models
-AICc(model0,
+AICc(model0, 
      model1,
      model2,
      model3) |> 
