@@ -110,41 +110,42 @@ The data is presented from the summer breeding seasons of 2016 and 2019, when pa
 |:------------:|:------:|:-----------------------:|---------------------------- |
 | 0            |        |                         | no predictors (null model)  |
 | 1            |    X   |            X            | all predictors (full model) |
-| 2            |    X   |            X            | season only                 |
+| 2            |    X   |                         | season only                 |
 | 3            |        |            X            | distance to forest edge only|
 
 ## e. Run the Models
 
 ```{R}
 nest_boxes_clean <- nest_boxes  |> # starting data frame
-  clean_names() # clean column names 
+  clean_names() |> # clean column names
+  mutate(season = as_factor(season))
 
 # model 0: null model
 model0 <- glm(
   sp ~ 1, # formula
   data = nest_boxes_clean, # data frame
-  family = binomial # for binary data
+  family = "binomial" # for binary data
 )
 
 # model 1: all predictors
 model1 <- glm(
   sp ~ season + edge_distance, # formula
   data = nest_boxes_clean, # data frame
-  family = binomial # for binary data
+  family = "binomial" # for binary data
 )
 
 # model 2: season only
 model2 <- glm(
   sp ~ season, # formula
   data = nest_boxes_clean, # data frame
-  family = binomial # for binary data 
+  family = "binomial" # for binary data 
 )
 
 # model 3: distance to forest edge only
 model3 <- glm(
   sp ~ edge_distance, # formula
   data = nest_boxes_clean, # data frame
-  family = binomial # for binary data
+  family = "binomial" # for binary data
 )
 ```
 
@@ -152,10 +153,12 @@ model3 <- glm(
 ## f. Check the diagnositics 
 
 ```{R}
-plot(simulateResiduals(model0), main = "Model 0")
-plot(simulateResiduals(model1), main = "Model 1")
-plot(simulateResiduals(model2), main = "Model 2")
-plot(simulateResiduals(model3), main = "Model 3")
+#| message: false # use this to make sure messages don't show up
+#| warning: false # use this to make sure warnings don't show up
+plot(simulateResiduals(model0)) 
+plot(simulateResiduals(model1))
+plot(simulateResiduals(model2))
+plot(simulateResiduals(model3))
 ```
 
 ## g. Select the Best Model
@@ -169,11 +172,11 @@ AICc(model0,
   arrange(AICc)
 ```
 
-The best model as determined by Akaike's Information Criterion (AIC) included both season and distance to forest edge as predictors of Swift Parrot nest box occupancy. 
+The best model as determined by Akaike's Information Criterion (AIC) included both season and distance to forest edge (model1) as predictors of Swift Parrot nest box occupancy (AICc = 226.31). 
 
 ## h. Visualize the Model Predictions
 
-```{R}
+```{r}
 model1_predictions <- ggpredict(
   model1, # model object
   terms = c("edge_distance", "season") # predictors
@@ -181,38 +184,49 @@ model1_predictions <- ggpredict(
   # treating this like a regular data frame
   # renaming the columns
   rename(edge_distance = x,
-         season = group)
+         season = group) |> 
+  # making sure that object is recognized as data frame
+  as.data.frame() |> 
+  # making sure that season is a factor with 2 levels: 2016 and 2019
+  mutate(season = fct_relevel(season, "2016", "2019"))
 
 # base layer: ggplot
-ggplot() +
-  geom_jitter(data = nest_boxes_clean, # using the nest_boxes_clean object
-              aes(x = edge_distance,
-           y = sp,
+ggplot(nest_boxes_clean,
+       aes(x = edge_distance,
+           y = sp, 
            color = season)) +
-  geom_line(data = model1_predictions,
-            aes(x = edge_distance,
-                y = predicted, 
-                color = season)) +
+  geom_point(size = 2,
+             alpha = 0.4) +
   geom_ribbon(data = model1_predictions,
                   aes(x = edge_distance,
                       ymin = conf.low,
                       ymax = conf.high,
-                      fill = season)) + 
+                      fill = season),
+              alpha = 0.4,
+              inherit.aes = FALSE) +
+  geom_line(data = model1_predictions,
+            aes(x = edge_distance,
+                y = predicted, 
+                color = season)) +
   # manually setting colors
-  scale_color_manual(values = c("2016" = "orchid", "2019" = "orange")) + 
-  scale_fill_manual(values = c("2016" = "orchid", "2019" = "orange")) + 
+  scale_color_manual(values = c("2016" = "orchid", "2019" = "orange")) +
+  scale_fill_manual(values = c("2016" = "orchid", "2019" = "orange")) +
   # labelling x- and y-axis
   labs(x = "Distance to Forest Edge (m)",
-       y = "Probability of Swift Parrot Occupancy",
+       y = "Probability of Nest Box Occupancy",
        title = "Predicted Nest Box Occupancy By Swift Parrots",
        color = "Season",
        fill = "Season") +
   # clean up theme
-  theme_minimal()
+  theme_minimal() +
+  theme(panel.grid = element_blank()) # remove gridlines
 ```
 
 
 ## i. Write a Caption for Figure 
+
+**Figure 1. Predicted probability of Swift Parrot nest box occupancy as a function of distance to forest edge in two breeding seasons (2016 and 2019).** Points represent observed occupancy (1 = occupied by Swift Parrot, 0 = not occupied), with color indicating breeding season. The solid lines show predicted probabilities from the best model, model1, which includes both season and edge distance as predictors. Shaded ribbons represent 95% confidence intervals around predictions. 
+Data source: Stojanovic, Dejan et al. (2021). Do nest boxes breed the target species or its competitors? A case study of a critically endangered bird [Dataset]. Dryad. https://doi.org/10.5061/dryad.83bk3j9sb
 
 ## j. Calculate Model Predictions
 
@@ -227,6 +241,8 @@ print(predicted_probabilities)
 
 
 ## k. Interpret Results
+
+The predicted probability of Swift Parrot nest box occupancy is highest at the forest edge (0 m) and decreases further away (900 m) in both breeding seasons. At the forest edge (0 m), the probability of Swift Parrot nest box occupancy was 0.48(95% CI [0.33, 0.64]) in 2016 and 0.30(95% CI [0.18, 0.44]). At 900 m from the forest edge, occupancy dropped to 0.12(95% CI [0.06, 0.24]) in 2016 and 0.06(95% CI [0.03, 0.13]).This negative relationship between distance from the forest edge and occupancy probability suggests that Swift Parrots prefer nesting sites closer to forest edges. This pattern contrasts with Tree Martins, which showed increased occupancy farther from forest edges, suggesting species-specific habitat preferences likely shaped by competition or resource distribution.  
 
 # 4. Affective and Exploratory Visualizations
 
