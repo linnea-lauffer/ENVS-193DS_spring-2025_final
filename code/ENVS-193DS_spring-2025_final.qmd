@@ -60,13 +60,16 @@ Part 2: We rejected the null hypothesis that there is no difference in average n
 
 # clean and transform sst data frame
 sst_clean <- sst |> 
-  mutate( year = year(date),
-          month = month(date, label = TRUE)) |> 
-  filter(year %in% 2018:2023) |> # keep data from 2018-2023
-  group_by(year, month) |> # group by year and month
-  summarise(mean_monthly_sst = mean(temp)) |> # calculate mean temp for each group
-  arrange(desc(year), match(month, month.abb)) |> # arrangeby descending year and month order
-  mutate(year = factor(year, levels = sort(unique(year)))) # year treated as factor 
+  mutate(
+    year = factor(year(date), levels = as.character(2018:2023)), 
+    month = factor(month(date), levels = 1:12, labels = month.abb, ordered = TRUE)
+  ) |> 
+  filter(year %in% as.character(2018:2023)) |>  # keep data from 2018-2023
+  group_by(year, month) |>                      # group by year and month
+  summarise(mean_monthly_sst = mean(temp, na.rm = TRUE), .groups = "drop") |>  # calculate mean temp for each group
+  arrange(year, month) |>                        # arrange by year ascending and month order
+  mutate(year = factor(year, levels = sort(unique(year))))  # ensure year is factor with sorted levels
+ 
 
 sst_clean |> slice_sample(n = 5) # display 5 rows from the cleaned data
 str(sst_clean) # display the structure of the dataset
