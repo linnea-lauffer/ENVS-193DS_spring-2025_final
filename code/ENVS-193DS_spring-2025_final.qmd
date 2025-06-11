@@ -1,6 +1,6 @@
 ---
 title: "ENVS-193DS_spring-2025_final"
-name: "Linnea Lauffer"
+author: "Linnea Lauffer"
 date: "2025-06-10"
 format:
   html:
@@ -8,6 +8,8 @@ format:
     toc-location: left
     toc-float: true
 ---
+
+**GitHub Repository:** [https://github.com/linnea-lauffer/ENVS-193DS_spring-2025_final.git](https://github.com/linnea-lauffer/ENVS-193DS_spring-2025_final.git)
 
 # Set Up
 
@@ -53,38 +55,45 @@ Part 2: We rejected the null hypothesis that there is no difference in average n
 ## a. Cleaning and Summarizing
 
 ```{R}
+#| message: false # use this to make sure messages don't show up
+#| warning: false # use this to make sure warnings don't show up
+
+# clean and transform sst data frame
 sst_clean <- sst |> 
   mutate( year = year(date),
           month = month(date, label = TRUE)) |> 
-  filter(year %in% 2018:2023) |> 
+  filter(year %in% 2018:2023) |> # keep data from 2018-2023
   group_by(year, month) |> # group by year and month
-  summarise(mean_monthly_sst = mean(temp)) |> 
-  arrange(desc(year), match(month, month.abb)) |> 
-  mutate(year = factor(year, levels = sort(unique(year))))
+  summarise(mean_monthly_sst = mean(temp)) |> # calculate mean temp for each group
+  arrange(desc(year), match(month, month.abb)) |> # arrangeby descending year and month order
+  mutate(year = factor(year, levels = sort(unique(year)))) # year treated as factor 
 
-sst_clean |> slice_sample(n = 5)
-str(sst_clean)
+sst_clean |> slice_sample(n = 5) # display 5 rows from the cleaned data
+str(sst_clean) # display the structure of the dataset
 ```
 
 
 ## b. Visualize the Data
 
 ```{R}
-ggplot(data = sst_clean,
-       aes( x = month,
-            y = mean_monthly_sst,
-            group = year,
-            color = year)) + 
-  geom_line() +
-  geom_point() + 
-  scale_color_brewer(name = "Year", palette = "Reds") +
-  labs( x = "Month",
-        y = "Mean monthly sea surface temperature (ºC)") +
-  theme_minimal() +
-  theme(panel.background = element_rect(fill = "white", color = "black"), 
-        panel.grid = element_blank(),
-        legend.position = c(0.1, 0.75),
-        axis.ticks = element_line(color = "black"))
+#| message: false # use this to make sure messages don't show up
+#| warning: false # use this to make sure warnings don't show up
+
+ggplot(data = sst_clean, # starting data frame
+       aes( x = month, # x-axis is month
+            y = mean_monthly_sst, # y-axis is mean monthly sea surface temperature 
+            group = year, # group points into a line by year
+            color = year)) + # color each line by year
+  geom_line() + # add lines
+  geom_point() + # add points for each month's mean temp
+  scale_color_brewer(name = "Year", palette = "Reds") + # color pallete 
+  labs( x = "Month", # rename x-axis
+        y = "Mean monthly sea surface temperature (ºC)") + # rename y-axis
+  theme_minimal() + # clean theme
+  theme(panel.background = element_rect(fill = "white", color = "black"), # white background with black border 
+        panel.grid = element_blank(), # remove gridlines
+        legend.position = c(0.1, 0.75), # position legend to the left 
+        axis.ticks = element_line(color = "black")) # add tick marks
 ```
 
 
@@ -155,15 +164,17 @@ model3 <- glm(
 ```{R}
 #| message: false # use this to make sure messages don't show up
 #| warning: false # use this to make sure warnings don't show up
-plot(simulateResiduals(model0)) 
-plot(simulateResiduals(model1))
-plot(simulateResiduals(model2))
-plot(simulateResiduals(model3))
+
+plot(simulateResiduals(model0)) # generate and plot simulated residuals for model0
+plot(simulateResiduals(model1)) # generate and plot simulated residuals for model1
+plot(simulateResiduals(model2)) # generate and plot simulated residuals for model2 
+plot(simulateResiduals(model3)) # generate and plot simulated residuals for model3
 ```
 
 ## g. Select the Best Model
 
 ```{R}
+# compare AICc for the following models
 AICc(model0,
      model1,
      model2,
@@ -177,6 +188,9 @@ The best model as determined by Akaike's Information Criterion (AIC) included bo
 ## h. Visualize the Model Predictions
 
 ```{r}
+#| message: false # use this to make sure messages don't show up
+#| warning: false # use this to make sure warnings don't show up
+
 model1_predictions <- ggpredict(
   model1, # model object
   terms = c("edge_distance", "season") # predictors
@@ -191,31 +205,31 @@ model1_predictions <- ggpredict(
   mutate(season = fct_relevel(season, "2016", "2019"))
 
 # base layer: ggplot
-ggplot(nest_boxes_clean,
-       aes(x = edge_distance,
-           y = sp, 
-           color = season)) +
-  geom_point(size = 2,
-             alpha = 0.4) +
-  geom_ribbon(data = model1_predictions,
+ggplot(nest_boxes_clean, # starting data frame 
+       aes(x = edge_distance, # x-axis
+           y = sp, # y-axis
+           color = season)) + # color points by season
+  geom_point(size = 2, # add observed data points 
+             alpha = 0.4) + # make them semi-transparent
+  geom_ribbon(data = model1_predictions, # add 95% CI
                   aes(x = edge_distance,
-                      ymin = conf.low,
-                      ymax = conf.high,
-                      fill = season),
+                      ymin = conf.low, # lower bound of 95% CI
+                      ymax = conf.high, # upper bound of 95% CI
+                      fill = season), # fill by season
               alpha = 0.4,
               inherit.aes = FALSE) +
-  geom_line(data = model1_predictions,
-            aes(x = edge_distance,
-                y = predicted, 
-                color = season)) +
+  geom_line(data = model1_predictions, # add predicted probability of occupancy 
+            aes(x = edge_distance, # 
+                y = predicted, # predicted proabilty
+                color = season)) + # color by seasons
   # manually setting colors
-  scale_color_manual(values = c("2016" = "orchid", "2019" = "orange")) +
-  scale_fill_manual(values = c("2016" = "orchid", "2019" = "orange")) +
+  scale_color_manual(values = c("2016" = "orchid", "2019" = "orange")) + # custom colors
+  scale_fill_manual(values = c("2016" = "orchid", "2019" = "orange")) + # custom 95% CI to match 
   # labelling x- and y-axis
-  labs(x = "Distance to Forest Edge (m)",
-       y = "Probability of Nest Box Occupancy",
-       title = "Predicted Nest Box Occupancy By Swift Parrots",
-       color = "Season",
+  labs(x = "Distance to Forest Edge (m)", # relabel x-axis
+       y = "Probability of Nest Box Occupancy", # relabel y-axis
+       title = "Predicted Nest Box Occupancy By Swift Parrots", # title
+       color = "Season", # legend title
        fill = "Season") +
   # clean up theme
   theme_minimal() +
@@ -247,3 +261,19 @@ The predicted probability of Swift Parrot nest box occupancy is highest at the f
 # 4. Affective and Exploratory Visualizations
 
 ## a. Comparing Visualizations
+
+**How are the visualizations different from each other in the way you have represented your data?**
+
+My exploratory visualizations from Homework 2 used boxplots to compare distributions of total sleep across different levels of predictors (work night and caffeine intake). These were statistical and straightforward visualizations to explore possible relationships in my data. My affective visualization from Homework 3 is a visual metaphor, using color, layout, and visual elements to highlight patterns in a more engaging and personal way. 
+
+**What similarities do you see between all your visualizations?**
+
+All of my visualizations represent hours of sleep on the y-axis, even though in Homework 2 it was clearly labeled as such, while in Homework 3 it was unlabeled equal to tree height. In all of my visualizations, total sleep is shown across different predictor variables.
+
+**What patterns do you see in each visualization? are these different visualizations? If so, why? If not, why not?**
+
+In Homework 2, the boxplot comparing work nights showed I actually got more sleep on work nights, which was unexpected, and for caffeine, I couldn’t yet distinguish any meaningful differences in sleep, likely due to limited data. In Homework 3, no clear pattern stood out, but sleep on work nights appeared slightly more consistent overall. The difference in patterns between the visualizations may be due to the affective visualization focusing more on storytelling than statistical clarity.
+
+**What kinds of feedback did you get during week 9 in workshop of from the instructors? How did you implement or try those suggestions? If you tried and kept those suggestions, explain how and why; if not, explain why not.**
+
+Since I had used my extension for Homework 3, I didn’t have my affective visualization ready for Week 9, so I only reviewed other students' projects. But in Week 10, I received feedback that my affective visualization was fun and that the categorizations I used were engaging and unique.
