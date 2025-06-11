@@ -218,71 +218,57 @@ window.Quarto = {
 <section id="a.-cleaning-and-summarizing" class="level2">
 <h2 class="anchored" data-anchor-id="a.-cleaning-and-summarizing">a. Cleaning and Summarizing</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>sst_clean <span class="ot">&lt;-</span> sst <span class="sc">|&gt;</span> </span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>( <span class="at">year =</span> <span class="fu">year</span>(date),</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">month =</span> <span class="fu">month</span>(date, <span class="at">label =</span> <span class="cn">TRUE</span>)) <span class="sc">|&gt;</span> </span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(year <span class="sc">%in%</span> <span class="dv">2018</span><span class="sc">:</span><span class="dv">2023</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(year, month) <span class="sc">|&gt;</span> <span class="co"># group by year and month</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">mean_monthly_sst =</span> <span class="fu">mean</span>(temp)) <span class="sc">|&gt;</span> </span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(year), <span class="fu">match</span>(month, month.abb)) <span class="sc">|&gt;</span> </span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">year =</span> <span class="fu">factor</span>(year, <span class="at">levels =</span> <span class="fu">sort</span>(<span class="fu">unique</span>(year))))</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>sst_clean <span class="sc">|&gt;</span> <span class="fu">slice_sample</span>(<span class="at">n =</span> <span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># clean and transform sst data frame</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>sst_clean <span class="ot">&lt;-</span> sst <span class="sc">|&gt;</span> </span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">year =</span> <span class="fu">factor</span>(<span class="fu">year</span>(date), <span class="at">levels =</span> <span class="fu">as.character</span>(<span class="dv">2018</span><span class="sc">:</span><span class="dv">2023</span>)), </span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">month =</span> <span class="fu">factor</span>(<span class="fu">month</span>(date), <span class="at">levels =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">12</span>, <span class="at">labels =</span> month.abb, <span class="at">ordered =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span> </span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(year <span class="sc">%in%</span> <span class="fu">as.character</span>(<span class="dv">2018</span><span class="sc">:</span><span class="dv">2023</span>)) <span class="sc">|&gt;</span>  <span class="co"># keep data from 2018-2023</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(year, month) <span class="sc">|&gt;</span>                      <span class="co"># group by year and month</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">mean_monthly_sst =</span> <span class="fu">mean</span>(temp, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="at">.groups =</span> <span class="st">"drop"</span>) <span class="sc">|&gt;</span>  <span class="co"># calculate mean temp for each group</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(year, month) <span class="sc">|&gt;</span>                        <span class="co"># arrange by year ascending and month order</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">year =</span> <span class="fu">factor</span>(year, <span class="at">levels =</span> <span class="fu">sort</span>(<span class="fu">unique</span>(year))))  <span class="co"># ensure year is factor with sorted levels</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>sst_clean <span class="sc">|&gt;</span> <span class="fu">slice_sample</span>(<span class="at">n =</span> <span class="dv">5</span>) <span class="co"># display 5 rows from the cleaned data</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 30 × 3
-# Groups:   year [6]
-   year  month mean_monthly_sst
-   &lt;fct&gt; &lt;ord&gt;            &lt;dbl&gt;
- 1 2018  Sep               18.2
- 2 2018  Nov               17.9
- 3 2018  Jun               15.5
- 4 2018  Jul               18.2
- 5 2018  Mar               13.5
- 6 2019  May               14.3
- 7 2019  Oct               17.1
- 8 2019  Aug               17.0
- 9 2019  Feb               14.1
-10 2019  Jan               14.7
-# ℹ 20 more rows</code></pre>
+<pre><code># A tibble: 5 × 3
+  year  month mean_monthly_sst
+  &lt;fct&gt; &lt;ord&gt;            &lt;dbl&gt;
+1 2018  Jun               15.5
+2 2022  Jan               13.9
+3 2021  Sep               17.1
+4 2020  Feb               14.7
+5 2022  Jun               16.2</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(sst_clean)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(sst_clean) <span class="co"># display the structure of the dataset</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>gropd_df [72 × 3] (S3: grouped_df/tbl_df/tbl/data.frame)
- $ year            : Factor w/ 6 levels "2018","2019",..: 6 6 6 6 6 6 6 6 6 6 ...
+<pre><code>tibble [72 × 3] (S3: tbl_df/tbl/data.frame)
+ $ year            : Factor w/ 6 levels "2018","2019",..: 1 1 1 1 1 1 1 1 1 1 ...
  $ month           : Ord.factor w/ 12 levels "Jan"&lt;"Feb"&lt;"Mar"&lt;..: 1 2 3 4 5 6 7 8 9 10 ...
- $ mean_monthly_sst: num [1:72] 14 13 12.8 12.4 14.3 ...
- - attr(*, "groups")= tibble [6 × 2] (S3: tbl_df/tbl/data.frame)
-  ..$ year : Factor w/ 6 levels "2018","2019",..: 1 2 3 4 5 6
-  ..$ .rows: list&lt;int&gt; [1:6] 
-  .. ..$ : int [1:12] 61 62 63 64 65 66 67 68 69 70 ...
-  .. ..$ : int [1:12] 49 50 51 52 53 54 55 56 57 58 ...
-  .. ..$ : int [1:12] 37 38 39 40 41 42 43 44 45 46 ...
-  .. ..$ : int [1:12] 25 26 27 28 29 30 31 32 33 34 ...
-  .. ..$ : int [1:12] 13 14 15 16 17 18 19 20 21 22 ...
-  .. ..$ : int [1:12] 1 2 3 4 5 6 7 8 9 10 ...
-  .. ..@ ptype: int(0) 
-  ..- attr(*, ".drop")= logi TRUE</code></pre>
+ $ mean_monthly_sst: num [1:72] 15 14.3 13.5 12.8 13.6 ...</code></pre>
 </div>
 </div>
 </section>
 <section id="b.-visualize-the-data" class="level2">
 <h2 class="anchored" data-anchor-id="b.-visualize-the-data">b. Visualize the Data</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data =</span> sst_clean,</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>       <span class="fu">aes</span>( <span class="at">x =</span> month,</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>            <span class="at">y =</span> mean_monthly_sst,</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">group =</span> year,</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>            <span class="at">color =</span> year)) <span class="sc">+</span> </span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span> </span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_brewer</span>(<span class="at">name =</span> <span class="st">"Year"</span>, <span class="at">palette =</span> <span class="st">"Reds"</span>) <span class="sc">+</span></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>( <span class="at">x =</span> <span class="st">"Month"</span>,</span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">y =</span> <span class="st">"Mean monthly sea surface temperature (ºC)"</span>) <span class="sc">+</span></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">panel.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">"white"</span>, <span class="at">color =</span> <span class="st">"black"</span>), </span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>        <span class="at">panel.grid =</span> <span class="fu">element_blank</span>(),</span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>        <span class="at">legend.position =</span> <span class="fu">c</span>(<span class="fl">0.1</span>, <span class="fl">0.75</span>),</span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.ticks =</span> <span class="fu">element_line</span>(<span class="at">color =</span> <span class="st">"black"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data =</span> sst_clean, <span class="co"># starting data frame</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>       <span class="fu">aes</span>( <span class="at">x =</span> month, <span class="co"># x-axis is month</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>            <span class="at">y =</span> mean_monthly_sst, <span class="co"># y-axis is mean monthly sea surface temperature </span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">group =</span> year, <span class="co"># group points into a line by year</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>            <span class="at">color =</span> year)) <span class="sc">+</span> <span class="co"># color each line by year</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span> <span class="co"># add lines</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span> <span class="co"># add points for each month's mean temp</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_brewer</span>(<span class="at">name =</span> <span class="st">"Year"</span>, <span class="at">palette =</span> <span class="st">"Reds"</span>) <span class="sc">+</span> <span class="co"># color pallete </span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>( <span class="at">x =</span> <span class="st">"Month"</span>, <span class="co"># rename x-axis</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">y =</span> <span class="st">"Mean monthly sea surface temperature (ºC)"</span>) <span class="sc">+</span> <span class="co"># rename y-axis</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span> <span class="co"># clean theme</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">panel.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">"white"</span>, <span class="at">color =</span> <span class="st">"black"</span>), <span class="co"># white background with black border </span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>        <span class="at">panel.grid =</span> <span class="fu">element_blank</span>(), <span class="co"># remove gridlines</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>        <span class="at">legend.position =</span> <span class="fu">c</span>(<span class="fl">0.1</span>, <span class="fl">0.75</span>), <span class="co"># position legend to the left </span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.ticks =</span> <span class="fu">element_line</span>(<span class="at">color =</span> <span class="st">"black"</span>)) <span class="co"># add tick marks</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -392,7 +378,7 @@ window.Quarto = {
 <section id="f.-check-the-diagnositics" class="level2">
 <h2 class="anchored" data-anchor-id="f.-check-the-diagnositics">f.&nbsp;Check the diagnositics</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">simulateResiduals</span>(model0)) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">simulateResiduals</span>(model0)) <span class="co"># generate and plot simulated residuals for model0</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -400,7 +386,7 @@ window.Quarto = {
 </figure>
 </div>
 </div>
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">simulateResiduals</span>(model1))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">simulateResiduals</span>(model1)) <span class="co"># generate and plot simulated residuals for model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -408,7 +394,7 @@ window.Quarto = {
 </figure>
 </div>
 </div>
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">simulateResiduals</span>(model2))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">simulateResiduals</span>(model2)) <span class="co"># generate and plot simulated residuals for model2 </span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -416,7 +402,7 @@ window.Quarto = {
 </figure>
 </div>
 </div>
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">simulateResiduals</span>(model3))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">simulateResiduals</span>(model3)) <span class="co"># generate and plot simulated residuals for model3</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -429,12 +415,13 @@ window.Quarto = {
 <section id="g.-select-the-best-model" class="level2">
 <h2 class="anchored" data-anchor-id="g.-select-the-best-model">g. Select the Best Model</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">AICc</span>(model0,</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>     model1,</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>     model2,</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>     model3) <span class="sc">|&gt;</span> </span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># arranging output in descending order of AIC</span></span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(AICc)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># compare AICc for the following models</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">AICc</span>(model0,</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>     model1,</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>     model2,</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>     model3) <span class="sc">|&gt;</span> </span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># arranging output in descending order of AIC</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(AICc)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>       df     AICc
 model1  3 226.3133
@@ -462,31 +449,31 @@ model0  1 238.8318</code></pre>
 <span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">season =</span> <span class="fu">fct_relevel</span>(season, <span class="st">"2016"</span>, <span class="st">"2019"</span>))</span>
 <span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a><span class="co"># base layer: ggplot</span></span>
-<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(nest_boxes_clean,</span>
-<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>       <span class="fu">aes</span>(<span class="at">x =</span> edge_distance,</span>
-<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>           <span class="at">y =</span> sp, </span>
-<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>           <span class="at">color =</span> season)) <span class="sc">+</span></span>
-<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">2</span>,</span>
-<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>             <span class="at">alpha =</span> <span class="fl">0.4</span>) <span class="sc">+</span></span>
-<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_ribbon</span>(<span class="at">data =</span> model1_predictions,</span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(nest_boxes_clean, <span class="co"># starting data frame </span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>       <span class="fu">aes</span>(<span class="at">x =</span> edge_distance, <span class="co"># x-axis</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>           <span class="at">y =</span> sp, <span class="co"># y-axis</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>           <span class="at">color =</span> season)) <span class="sc">+</span> <span class="co"># color points by season</span></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">2</span>, <span class="co"># add observed data points </span></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>             <span class="at">alpha =</span> <span class="fl">0.4</span>) <span class="sc">+</span> <span class="co"># make them semi-transparent</span></span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_ribbon</span>(<span class="at">data =</span> model1_predictions, <span class="co"># add 95% CI</span></span>
 <span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>                  <span class="fu">aes</span>(<span class="at">x =</span> edge_distance,</span>
-<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>                      <span class="at">ymin =</span> conf.low,</span>
-<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>                      <span class="at">ymax =</span> conf.high,</span>
-<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>                      <span class="at">fill =</span> season),</span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>                      <span class="at">ymin =</span> conf.low, <span class="co"># lower bound of 95% CI</span></span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>                      <span class="at">ymax =</span> conf.high, <span class="co"># upper bound of 95% CI</span></span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>                      <span class="at">fill =</span> season), <span class="co"># fill by season</span></span>
 <span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a>              <span class="at">alpha =</span> <span class="fl">0.4</span>,</span>
 <span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>              <span class="at">inherit.aes =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
-<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">data =</span> model1_predictions,</span>
-<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a>            <span class="fu">aes</span>(<span class="at">x =</span> edge_distance,</span>
-<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a>                <span class="at">y =</span> predicted, </span>
-<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a>                <span class="at">color =</span> season)) <span class="sc">+</span></span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">data =</span> model1_predictions, <span class="co"># add predicted probability of occupancy </span></span>
+<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a>            <span class="fu">aes</span>(<span class="at">x =</span> edge_distance, <span class="co"># </span></span>
+<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a>                <span class="at">y =</span> predicted, <span class="co"># predicted proabilty</span></span>
+<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a>                <span class="at">color =</span> season)) <span class="sc">+</span> <span class="co"># color by seasons</span></span>
 <span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a>  <span class="co"># manually setting colors</span></span>
-<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"2016"</span> <span class="ot">=</span> <span class="st">"orchid"</span>, <span class="st">"2019"</span> <span class="ot">=</span> <span class="st">"orange"</span>)) <span class="sc">+</span></span>
-<span id="cb14-34"><a href="#cb14-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"2016"</span> <span class="ot">=</span> <span class="st">"orchid"</span>, <span class="st">"2019"</span> <span class="ot">=</span> <span class="st">"orange"</span>)) <span class="sc">+</span></span>
+<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"2016"</span> <span class="ot">=</span> <span class="st">"orchid"</span>, <span class="st">"2019"</span> <span class="ot">=</span> <span class="st">"orange"</span>)) <span class="sc">+</span> <span class="co"># custom colors</span></span>
+<span id="cb14-34"><a href="#cb14-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"2016"</span> <span class="ot">=</span> <span class="st">"orchid"</span>, <span class="st">"2019"</span> <span class="ot">=</span> <span class="st">"orange"</span>)) <span class="sc">+</span> <span class="co"># custom 95% CI to match </span></span>
 <span id="cb14-35"><a href="#cb14-35" aria-hidden="true" tabindex="-1"></a>  <span class="co"># labelling x- and y-axis</span></span>
-<span id="cb14-36"><a href="#cb14-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Distance to Forest Edge (m)"</span>,</span>
-<span id="cb14-37"><a href="#cb14-37" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Probability of Nest Box Occupancy"</span>,</span>
-<span id="cb14-38"><a href="#cb14-38" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"Predicted Nest Box Occupancy By Swift Parrots"</span>,</span>
-<span id="cb14-39"><a href="#cb14-39" aria-hidden="true" tabindex="-1"></a>       <span class="at">color =</span> <span class="st">"Season"</span>,</span>
+<span id="cb14-36"><a href="#cb14-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Distance to Forest Edge (m)"</span>, <span class="co"># relabel x-axis</span></span>
+<span id="cb14-37"><a href="#cb14-37" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Probability of Nest Box Occupancy"</span>, <span class="co"># relabel y-axis</span></span>
+<span id="cb14-38"><a href="#cb14-38" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"Predicted Nest Box Occupancy By Swift Parrots"</span>, <span class="co"># title</span></span>
+<span id="cb14-39"><a href="#cb14-39" aria-hidden="true" tabindex="-1"></a>       <span class="at">color =</span> <span class="st">"Season"</span>, <span class="co"># legend title</span></span>
 <span id="cb14-40"><a href="#cb14-40" aria-hidden="true" tabindex="-1"></a>       <span class="at">fill =</span> <span class="st">"Season"</span>) <span class="sc">+</span></span>
 <span id="cb14-41"><a href="#cb14-41" aria-hidden="true" tabindex="-1"></a>  <span class="co"># clean up theme</span></span>
 <span id="cb14-42"><a href="#cb14-42" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
@@ -502,7 +489,7 @@ model0  1 238.8318</code></pre>
 </section>
 <section id="i.-write-a-caption-for-figure" class="level2">
 <h2 class="anchored" data-anchor-id="i.-write-a-caption-for-figure">i. Write a Caption for Figure</h2>
-<p><strong>Figure 1. Predicted probability of Swift Parrot nest box occupancy as a function of distance to forest edge in two breeding seasons (2016 and 2019).</strong> Points represent observed occupancy (1 = occupied by Swift Parrot, 0 = not occupied), with color indicating breeding season. The solid lines show predicted probabilities from the best model, model1, which includes both season and edge distance as predictors. Shaded ribbons represent 95% confidence intervals around predictions. Data source: Stojanovic, Dejan et al.&nbsp;(2021). Do nest boxes breed the target species or its competitors? A case study of a critically endangered bird [Dataset]. Dryad. https://doi.org/10.5061/dryad.83bk3j9sb</p>
+<p><strong>Figure 1. Predicted probability of Swift Parrot nest box occupancy as a function of distance to forest edge in two breeding seasons (2016 and 2019).</strong> Points represent observed occupancy (1 = occupied by Swift Parrot, 0 = not occupied), with color indicating breeding season. The solid lines show predicted probabilities from the best model, model1, which includes both season and edge distance as predictors. Shaded ribbons represent 95% confidence intervals around predictions. Data source: Stojanovic, Dejan et al.&nbsp;(2021). Do nest boxes breed the target species or its competitors? A case study of a critically endangered bird [Dataset]. Dryad. <a href="https://doi.org/10.5061/dryad.83bk3j9sb">https://doi.org/10.5061/dryad.83bk3j9sb</a></p>
 </section>
 <section id="j.-calculate-model-predictions" class="level2">
 <h2 class="anchored" data-anchor-id="j.-calculate-model-predictions">j. Calculate Model Predictions</h2>
