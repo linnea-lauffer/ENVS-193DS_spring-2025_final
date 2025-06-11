@@ -246,7 +246,7 @@ ggplot(nest_boxes_clean, # starting data frame
 ## i. Write a Caption for Figure 
 
 **Figure 1. Predicted probability of Swift Parrot nest box occupancy as a function of distance to forest edge in two breeding seasons (2016 and 2019).** Points represent observed occupancy (1 = occupied by Swift Parrot, 0 = not occupied), with color indicating breeding season. The solid lines show predicted probabilities from the best model, model1, which includes both season and edge distance as predictors. Shaded ribbons represent 95% confidence intervals around predictions. 
-Data source: Stojanovic, Dejan et al. (2021). Do nest boxes breed the target species or its competitors? A case study of a critically endangered bird [Dataset]. Dryad. https://doi.org/10.5061/dryad.83bk3j9sb
+Data source: Stojanovic, Dejan et al. (2021). Do nest boxes breed the target species or its competitors? A case study of a critically endangered bird [Dataset]. Dryad. [https://doi.org/10.5061/dryad.83bk3j9sb](https://doi.org/10.5061/dryad.83bk3j9sb)
 
 ## j. Calculate Model Predictions
 
