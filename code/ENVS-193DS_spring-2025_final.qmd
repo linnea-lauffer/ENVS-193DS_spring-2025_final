@@ -239,7 +239,9 @@ ggplot(nest_boxes_clean, # starting data frame
        fill = "Season") +
   # clean up theme
   theme_minimal() +
-  theme(panel.grid = element_blank()) # remove gridlines
+  theme(panel.background = element_rect(fill = "white", color = "black"), # white background with black border 
+        panel.grid = element_blank(), # remove gridlines
+        axis.ticks = element_line(color = "black")) # add tick marks
 ```
 
 
